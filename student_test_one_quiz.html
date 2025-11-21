@@ -1,0 +1,403 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <title>Student Test & Comment Entry</title>
+  <style>
+    body { font-family: Arial, sans-serif; background-color: #f5f5f5; }
+    .wrap { max-width: 800px; margin: 40px auto; background: #fff; padding: 20px 30px; border-radius: 10px; box-shadow: 0 0 10px rgba(0,0,0,0.1); }
+    h1, h2 { text-align: center; }
+    label { display: block; margin-top: 15px; font-weight: bold; }
+    input[type="number"], select, textarea { width: 100%; padding: 8px; font-size: 16px; margin-top: 5px; box-sizing: border-box; }
+    textarea { height: 160px; font-family: Consolas, Monaco, monospace; margin-bottom: 15px; }
+    button { margin-top: 12px; padding: 10px 16px; font-size: 16px; cursor: pointer; background: #007acc; color: white; border: none; border-radius: 6px; }
+    button:hover { background: #005fa3; }
+    pre { background: #f5f5f5; padding: 10px; overflow-x: auto; border-radius: 5px; }
+    p { margin-top: 20px; font-size: 16px; }
+    .muted { color:#666; font-size:13px; }
+    .row { display:flex; align-items:center; gap:12px; flex-wrap:wrap; }
+    .switch { display:flex; align-items:center; gap:8px; font-weight:normal; }
+    .email-preview { margin-top: 16px; padding: 16px; border: 1px solid #e2e2e2; border-radius: 8px; background: #fafafa; }
+    .toast { position: fixed; bottom: 24px; left: 50%; transform: translateX(-50%); background: #1a7f37; color: #fff; padding: 10px 14px; border-radius: 6px; box-shadow: 0 6px 20px rgba(0,0,0,0.2); font-size: 14px; display:none; }
+    .grid-3 { display:grid; grid-template-columns: repeat(3, 1fr); gap: 12px; }
+    .section-card { border:1px solid #e5e5e5; border-radius:10px; padding:14px; background:#fafcff; }
+    .section-title { margin:0 0 8px 0; font-size:16px; text-align:left; }
+    .hint { font-weight:normal; color:#666; font-size:13px; margin-top:4px; }
+  </style>
+</head>
+<body>
+  <div class="wrap">
+    <h1>Student Test & Comment Entry</h1>
+
+    <!-- Student -->
+    <label for="studentName">Select Student:</label>
+    <select id="studentName">
+      <option value="">-- Choose a Student --</option>
+      <option>James Wright</option>
+      <option>Brayden Allen-Fradsham</option>
+      <option>Oniko Bailey</option>
+      <option>Jamie Benson</option>
+      <option>Ryerson Burdick</option>
+      <option>Dylan Connell</option>
+      <option>Chase Coughlin</option>
+      <option>Noah Crooks</option>
+      <option>Natalie Devlin</option>
+      <option>Madilyn Dillon</option>
+      <option>Blake Ferguson</option>
+      <option>Claire Ferguson</option>
+      <option>Yamen Ghaleb</option>
+      <option>Caleb Holden</option>
+      <option>Lucas Kinchen</option>
+      <option>John Martin</option>
+      <option>Mason McCrum</option>
+      <option>Maci Millen</option>
+      <option>Izyk Morton</option>
+      <option>Tayden O'Rourke</option>
+      <option>Knoxx Rykers</option>
+      <option>Parker Scott</option>
+      <option>Oliviah Weaver</option>
+      <option>Annalise Welk</option>
+      <option>Reginald Wilson</option>
+      <option>Mattais Wojtowicz</option>
+    </select>
+    <p id="parentEmailDisplay"><em>Parent email(s) will appear here once a student is selected.</em></p>
+
+    <!-- 📘 Quiz Section (single quiz, out of 9) -->
+    <div class="section-card">
+      <h3 class="section-title">Quiz Mark <span class="hint">(out of 16)</span></h3>
+      <div class="grid-3">
+        <div>
+          <label for="quiz1Mark">Quiz Mark (0–16):</label>
+          <input type="number" id="quiz1Mark" value="" min="0" max="16" step="1" inputmode="numeric">
+        </div>
+      </div>
+    </div>
+
+    <!-- Test -->
+    <label for="totalScore">Total Test Score:</label>
+    <input type="number" id="totalScore" value="50">
+
+    <label for="studentMark">Student’s Test Mark:</label>
+    <input type="number" id="studentMark" value="">
+    
+
+    <label for="overallAverage">Overall Average to Date (%):</label>
+    <input type="number" id="overallAverage" value="" min="0" max="100" step="0.1">
+    
+
+    <!-- Comment Entry -->
+    <h2>Comment Entry</h2>
+
+    <!-- Import General comment file -->
+    <button id="importCcBtn" type="button">Import Comment (General)</button>
+    <input id="ccFileInput" type="file" accept=".txt,.md" hidden>
+    <div id="ccFileMeta" class="muted"></div>
+
+    <label for="codeInput1">General Comments:</label>
+    <textarea id="codeInput1">This is some general comment for all parents to read</textarea>
+
+    <div class="row">
+      <label for="codeInput2" style="margin-top:0;">Student-Specific Comments:</label>
+      <label class="switch" title="Lock to prevent auto-fill overwriting">
+        <input id="scLock" type="checkbox">
+        🔒 Lock Student-Specific Comments
+      </label>
+    </div>
+    <textarea id="codeInput2" data-autofilled="0"></textarea>
+
+    <div class="row">
+      <button id="saveBtn">Save All Data</button>
+      <button id="formatBtn" title="Copies rich HTML to clipboard and shows preview">Format for Email</button>
+      <button id="emailBtn" title="Copies rich HTML, opens Gmail compose">Email Parent(s)</button>
+    </div>
+
+    <div id="emailPreview" class="email-preview" style="display:none;"></div>
+
+    <p id="output"></p>
+
+    <h3>Preview of Update</h3>
+    <pre id="preview1"></pre>
+    <pre id="preview2"></pre>
+  </div>
+
+  <div id="toast" class="toast">Formatted message copied to clipboard</div>
+
+  <script>
+    // --- Parent email list (unchanged) ---
+    const parentEmails = {
+      "James Wright": ["jwrightnisha@gmail.com"],
+      "Brayden Allen-Fradsham": ["jamie.allen2@extendicare.com"],
+      "Oniko Bailey": ["bailonik75@pvnccdsb.on.ca", "kareenaann@gmail.com"],
+      "Jamie Benson": ["carriebenson31@gmail.com"],
+      "Ryerson Burdick": ["mburdick@hotmail.ca"],
+      "Dylan Connell": ["k.connell@hotmail.com", "rickcon111@gmail.com"],
+      "Chase Coughlin": ["dcoughlin@informbrokerage.com", "jasoncoughlin@cokecanada.com"],
+      "Noah Crooks": ["marticrooks@gmail.com"],
+      "Natalie Devlin": ["crystaldevlin62@gmail.com", "briandevlin1@hotmail.com"],
+      "Madilyn Dillon": ["krys.dillon@gmail.com"],
+      "Blake Ferguson": ["fergblak10@pvnccdsb.on.ca"],
+      "Claire Ferguson": ["aferg12@hotmail.com", "Tferg87@hotmail.com"],
+      "Yamen Ghaleb": ["om.yamen.tk@gmail.com", "taher.a.ghaleb@gmail.com"],
+      "Caleb Holden": ["kholden87@outlook.com"],
+      "Lucas Kinchen": ["ehynes81@hotmail.com", "tylorkinchen1983@gmail.com"],
+      "John Martin": ["jmroofingandrenovations@gmail.com"],
+      "John Martin": ["jmroofingandrenovations@gmail.com"],
+      "Mason McCrum": ["amyleewatts@hotmail.com", "kmccrum12@hotmail.com"],
+      "Maci Millen": ["b.stanley025@live.com", "katistanley02@outlook.com"],
+      "Izyk Morton": ["stefis1983@hotmail.com", "Steve.101279@gmail.com"],
+      "Tayden O'Rourke": ["jennybestard@gmail.com", "irish_waxer@hotmail.com"],
+      "Knoxx Rykers": ["HRykers@hotmail.com"],
+      "Parker Scott": ["pridie.momma87@outlook.com", "jsco82@gmail.com"],
+      "Oliviah Weaver": ["mweaver098@gmail.com"],
+      "Annalise Welk": ["taram6812@gmail.com"],
+      "Reginald Wilson": ["sarah.godby@gmail.com"],
+      "Mattais Wojtowicz": ["heidi_wand@hotmail.com", "danielwojtowicz@hotmail.com"]
+    };
+
+    // --- Element references (single quiz input) ---
+    const studentSelect = document.getElementById("studentName");
+    const emailDisplay  = document.getElementById("parentEmailDisplay");
+    const saveBtn       = document.getElementById("saveBtn");
+    const formatBtn     = document.getElementById("formatBtn");
+    const emailBtn      = document.getElementById("emailBtn");
+    const importCcBtn   = document.getElementById("importCcBtn");
+    const ccFileInput   = document.getElementById("ccFileInput");
+    const ccFileMeta    = document.getElementById("ccFileMeta");
+    const scBox         = document.getElementById("codeInput2");
+    const scLock        = document.getElementById("scLock");
+    const emailPreview  = document.getElementById("emailPreview");
+    const toast         = document.getElementById("toast");
+
+    const quiz1Input = document.getElementById("quiz1Mark");
+    const QUIZ_TOTAL = 16;
+
+    // --- Helpers (unchanged) ---
+    function firstNameOf(fullName) { return fullName ? fullName.trim().split(/\\s+/)[0] : ""; }
+    function line(label, value) { const padTo = 22; const padded = (label + ":").padEnd(padTo, " "); return `${padded} ${value}`; }
+    function escapeHtml(s) { return String(s).replace(/&/g,"&amp;").replace(/</g,"&lt;").replace(/>/g,"&gt;").replace(/"/g,"&quot;").replace(/'/g,"&#39;"); }
+    function showToast(msg="Formatted message copied to clipboard"){ toast.textContent = msg; toast.style.display="block"; setTimeout(()=>toast.style.display="none",1600); }
+
+    // Track manual edits
+    scBox.addEventListener("input", () => { scBox.dataset.autofilled = "0"; });
+
+    // Auto-fill first name ONLY if unlocked AND empty or previously auto-filled
+    function maybeFillStudentSpecific(name) {
+      const fname = firstNameOf(name);
+      const isEmpty = scBox.value.trim() === "";
+      const wasAuto = scBox.dataset.autofilled === "1";
+      if (!name) { if (wasAuto) { scBox.value = ""; scBox.dataset.autofilled = "0"; } return; }
+      if (scLock.checked) return;
+      if (isEmpty || wasAuto) { scBox.value = fname; scBox.dataset.autofilled = "1"; }
+    }
+
+    // Show parent emails + handle SC defaulting
+    function renderParentEmails() {
+      const name = studentSelect.value;
+      const emails = parentEmails[name];
+      if (!name) {
+        emailDisplay.innerHTML = "<em>Parent email(s) will appear here once a student is selected.</em>";
+      } else if (!emails || emails.length === 0) {
+        emailDisplay.textContent = "No parent email found for this student.";
+      } else {
+        emailDisplay.innerHTML = emails.map(e => `<a href="mailto:${e}">${e}</a>`).join(", ");
+      }
+      maybeFillStudentSpecific(name);
+    }
+    studentSelect.addEventListener("change", renderParentEmails);
+    document.addEventListener("DOMContentLoaded", renderParentEmails);
+
+    // --- quiz helpers ---
+    function pct(num, den){ return den > 0 ? ((num/den) * 100) : 0; }
+    function fmt1(n){ return Number.isFinite(n) ? n.toFixed(1) : "0.0"; }
+
+    // Build formatted email (HTML + plain text)
+    function buildEmail() {
+      const name = studentSelect.value;
+      const emails = parentEmails[name] || [];
+      if (!name) { alert("Please select a student first."); return null; }
+      if (emails.length === 0) { alert("No parent email found for this student."); return null; }
+
+      // Quiz
+      const q1 = parseFloat(quiz1Input.value) || 0;
+      const q1p = fmt1(pct(q1, QUIZ_TOTAL));
+
+      // Test
+      const totalScoreVal  = parseFloat(document.getElementById("totalScore").value) || 0;
+      const studentMarkVal = parseFloat(document.getElementById("studentMark").value) || 0;
+      const testPercent    = totalScoreVal > 0 ? ((studentMarkVal / totalScoreVal) * 100) : 0;
+      const testPercentStr = testPercent.toFixed(1);
+
+      // Overall
+      const overallAvgVal  = document.getElementById("overallAverage").value;
+      const overallText    = overallAvgVal !== "" ? `${overallAvgVal}%` : "N/A";
+
+      // Comments
+      const ccVal = (document.getElementById("codeInput1").value || "").replace(/\\r\\n/g, "\\n").trim();
+      const scVal = (document.getElementById("codeInput2").value || "").replace(/\\r\\n/g, "\\n").trim();
+      const fname = firstNameOf(name);
+
+      const subject = `Progress Update for ${name}`;
+
+      const textBody = [
+        `Dear Parent/Guardian of ${name},`,
+        "",
+        ccVal ? `Note: ${ccVal}` : "Note: (no general comment provided)",
+        "",
+        "Summary of Current Progress",
+        "---------------------------",
+        line("Quiz", `${q1} / ${QUIZ_TOTAL} (${q1p}%)`),
+        line("Test Result", `${studentMarkVal} / ${totalScoreVal} (${testPercentStr}%)`),
+        line("Overall Average to Date", overallText),
+        "",
+        `Comments Specific To ${fname}`,
+        "--------------------------",
+        scVal || "(no specific comment provided)",
+        "",
+        "As always, if you have any questions or concerns, please feel free to email me at jameswright@pvnccdsb.on.ca",
+        "",
+        "Kind regards,",
+        "James Wright",
+        "Teacher, Math/Computer Science"
+      ].join("\\n");
+
+      const htmlBody = `
+<div style="font-family:Arial,Helvetica,sans-serif;font-size:14px;color:#222;line-height:1.5;">
+  <p>Dear Parent/Guardian of <strong>${escapeHtml(name)}</strong>,</p>
+
+  <p>${ccVal ? `<em>${escapeHtml(ccVal).replace(/\\n/g,'<br>')}</em>` : `<em>(no general comment provided)</em>`}</p>
+
+  <table role="presentation" style="border-collapse:collapse;width:100%;max-width:560px;background:#fff;border:1px solid #e5e5e5;border-radius:8px;">
+    <tbody>
+      <tr>
+        <td style="padding:12px 16px;background:#f7fbff;border-bottom:1px solid #e5e5e5;">
+          <strong style="font-size:15px;">Summary of Current Progress</strong>
+        </td>
+      </tr>
+      <tr>
+        <td style="padding:12px 16px;">
+          <table role="presentation" style="border-collapse:collapse;">
+            <tr>
+              <td style="padding:4px 12px 4px 0;color:#555;white-space:nowrap;">Quiz:</td>
+              <td style="padding:4px 0;"><strong>${q1} / ${QUIZ_TOTAL}</strong> (${q1p}%)</td>
+            </tr>
+            <tr>
+              <td style="padding:4px 12px 4px 0;color:#555;white-space:nowrap;">Test Result:</td>
+              <td style="padding:4px 0;"><strong>${studentMarkVal} / ${totalScoreVal}</strong> (${testPercentStr}%)</td>
+            </tr>
+            <tr>
+              <td style="padding:4px 12px 4px 0;color:#555;white-space:nowrap;">Overall Average to Date:</td>
+              <td style="padding:4px 0;"><strong>${escapeHtml(overallText)}</strong></td>
+            </tr>
+          </table>
+        </td>
+      </tr>
+      <tr>
+        <td style="padding:12px 16px;background:#f7fbff;border-top:1px solid #e5e5e5;border-bottom:1px solid #e5e5e5;">
+          <strong style="font-size:15px;">Comments Specific To ${escapeHtml(fname)}</strong>
+        </td>
+      </tr>
+      <tr>
+        <td style="padding:12px 16px;">
+          ${scVal ? escapeHtml(scVal).replace(/\\n/g,'<br>') : '(no specific comment provided)'}
+        </td>
+      </tr>
+    </tbody>
+  </table>
+
+  <hr style="border:none;border-top:1px dotted #999;margin:16px 0;">
+
+  <p>As always, if you have any questions or concerns, please feel free to email me at
+    <a href="mailto:jameswright@pvnccdsb.on.ca">jameswright@pvnccdsb.on.ca</a>.
+  </p>
+
+  <p>Kind regards,<br>
+     <strong>James Wright</strong><br>
+     Teacher, Math/Computer Science</p>
+</div>`.trim();
+
+      return { emails, subject, textBody, htmlBody };
+    }
+
+    // Format for Email (copies + shows preview)
+    formatBtn.addEventListener("click", async () => {
+      const built = buildEmail(); if (!built) return;
+      const { htmlBody, textBody } = built;
+
+      try {
+        const blobHtml = new Blob([htmlBody], { type: "text/html" });
+        const blobText = new Blob([textBody], { type: "text/plain" });
+        await navigator.clipboard.write([new ClipboardItem({ "text/html": blobHtml, "text/plain": blobText })]);
+        showToast();
+      } catch {
+        try { await navigator.clipboard.writeText(textBody); showToast("Plain text copied (browser blocked HTML)"); } catch {}
+      }
+
+      emailPreview.style.display = "block";
+      emailPreview.innerHTML = htmlBody + `<div class="muted" style="margin-top:8px;">Preview shown above. Paste (Ctrl/⌘+V) into Gmail.</div>`;
+      emailPreview.scrollIntoView({ behavior: "smooth", block: "start" });
+    });
+
+    // Email Parent(s) (copies + opens Gmail)
+    emailBtn.addEventListener("click", async () => {
+      const built = buildEmail(); if (!built) return;
+      const { emails, subject, textBody, htmlBody } = built;
+
+      try {
+        const blobHtml = new Blob([htmlBody], { type: "text/html" });
+        const blobText = new Blob([textBody], { type: "text/plain" });
+        await navigator.clipboard.write([new ClipboardItem({ "text/html": blobHtml, "text/plain": blobText })]);
+      } catch { try { await navigator.clipboard.writeText(textBody); } catch {} }
+
+      const to  = encodeURIComponent(emails.join(","));
+      const su  = encodeURIComponent(subject);
+      const bo  = encodeURIComponent("(Press Ctrl/⌘+V here to paste the formatted message.)\\n\\n" + textBody);
+      const bcc = encodeURIComponent("jameswright@pvnccdsb.on.ca");
+      const gmailComposeUrl = `https://mail.google.com/mail/?view=cm&fs=1&tf=1&to=${to}&bcc=${bcc}&su=${su}&body=${bo}`;
+      window.open(gmailComposeUrl, "_blank", "noopener");
+    });
+
+    // Save button (for simple preview) — includes single quiz now
+    saveBtn.addEventListener("click", () => {
+      const studentName   = studentSelect.value;
+
+      const q1 = parseFloat(quiz1Input.value) || 0;
+
+      const totalScore    = parseFloat(document.getElementById("totalScore").value) || 0;
+      const studentMark   = parseFloat(document.getElementById("studentMark").value) || 0;
+      const percent       = totalScore > 0 ? ((studentMark / totalScore) * 100).toFixed(1) : "0.0";
+      const overallAvgVal = document.getElementById("overallAverage").value;
+      const overallText   = overallAvgVal !== "" ? `${overallAvgVal}%` : "N/A";
+      const cc = document.getElementById("codeInput1").value.replace(/\\r\\n/g, "\\n");
+      const sc = document.getElementById("codeInput2").value.replace(/\\r\\n/g, "\\n");
+
+      if (!studentName) { document.getElementById("output").innerHTML = "⚠️ Please select a student."; return; }
+
+      document.getElementById("output").innerHTML = `
+        ✅ Data Saved Successfully<br><br>
+        <strong>Student:</strong> ${studentName}<br>
+        <strong>Quiz:</strong> ${q1} / ${QUIZ_TOTAL} (${fmt1(pct(q1, QUIZ_TOTAL))}%)<br>
+        <strong>Test Result:</strong> ${studentMark} / ${totalScore} (${percent}%)<br>
+        <strong>Overall Average to Date:</strong> ${overallText}<br>
+        <strong>Lines in General Comments:</strong> ${cc.split('\\n').length}<br>
+        <strong>Lines in Student-Specific Comments:</strong> ${sc.split('\\n').length}
+      `;
+
+      document.getElementById("preview1").textContent = cc;
+      document.getElementById("preview2").textContent = sc;
+    });
+
+    // Import General comment
+    importCcBtn.addEventListener("click", () => { ccFileInput.value = ""; ccFileInput.click(); });
+    ccFileInput.addEventListener("change", () => {
+      const file = ccFileInput.files && ccFileInput.files[0]; if (!file) return;
+      const reader = new FileReader();
+      reader.onload = e => {
+        const text = String(e.target.result || "").replace(/^\\uFEFF/, "").replace(/\\r\\n/g, "\\n");
+        document.getElementById("codeInput1").value = text;
+        ccFileMeta.textContent = `Loaded: ${file.name}`;
+      };
+      reader.readAsText(file);
+    });
+  </script>
+</body>
+</html>
